@@ -6,7 +6,7 @@
 ## Overview
 ## Hardware
 1. MCU
-    *   The NUCLEO-L476RG development board for its STM32L476RG Microprocessor
+    *   NUCLEO-L476RG development board for its STM32L476RG Microprocessor (ARM Cortex-M4)
 2. Circuit
     *   Overview ![System Architecture Diagram](https://github.com/addysfsu/Light_Chaser/blob/main/image-1.png?raw=true)
 ## Software
