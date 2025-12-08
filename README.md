@@ -17,3 +17,4 @@
 ## 3D Print
 1. 3D model files
     *   There is a plate for holding the LEDs and buttons, that snaps into a case. An existing clear plastic bubble was repurposed for our build, however any XX diameter hemisphere will do.
+    *   For the LED holding mounts, [this](https://www.printables.com/model/625992-5mm-led-holder) print was used
