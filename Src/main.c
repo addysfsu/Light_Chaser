@@ -123,7 +123,7 @@ int main(void)
 	configure_Button_pc2();  
 	configure_EXTI();
 
-	pinNum = 0;
+	pinNum = NUM_LEDS - 1;
 	game_running = 1;
 	button_pressed = 0;
 
