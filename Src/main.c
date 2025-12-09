@@ -5,13 +5,13 @@
 #define NUM_LEDS      5
 #define TARGET_INDEX  2   // index in led_pins[] for target LED
 
-// These are the actual PA pin numbers you wired:
-static const int led_pins[NUM_LEDS] = { 0, 1, 6, 7, 4 };
+// Wired PA PINs:
+static const int led_pins[NUM_LEDS] = { 0, 1, 6, 7, 4 }; // static because it reduces risk of name collisions in other .c files
 
-// Mask for all LED bits: PA0, PA1, PA2, PA3, PA6
+// Mask for all LED bits: PA0, PA1, PA6, PA7, PA6
 #define LED_MASK  ( (1<<0) | (1<<1) | (1<<6) | (1<<7) | (1<<4) )
 
-volatile unsigned int pinNum = 0;      // 0..4 index into led_pins[]
+volatile unsigned int pinNum = 0;      // 0 to 4 index into led_pins[], unsigned because we dont use negative index values
 volatile int game_running = 1;
 volatile int button_pressed = 0;
 
@@ -51,11 +51,12 @@ void EXTI15_10_IRQHandler(void)
 }
 
 void EXTI2_IRQHandler(void) {
-	// PR (Pending Register): Check if the interrupt is triggered by EXTI13, as EXTI 10-15 share this interrupt vector.
+	// PR (Pending Register): Check if the interrupt is triggered by EXTI13, as EXTI 10-15 share this interrupt vector
 	if ((EXTI->PR1 & EXTI_PR1_PIF2) == EXTI_PR1_PIF2) {
 		// cleared by writing a 1 to this bit
 		EXTI->PR1 |= EXTI_PR1_PIF2;
 		if ((GPIOC->IDR & (1<<2)) == (1<<2)){ //check if push button is pressed
+			// disable Systick and EXTI interrupts because we want the below lines to run for sure without conflict
 			__disable_irq();
 			// WIN if current index matches target index
 			int win = (pinNum == TARGET_INDEX);
@@ -67,15 +68,16 @@ void EXTI2_IRQHandler(void) {
 				int target_pin = led_pins[TARGET_INDEX];
 				//toggles immediately
 				GPIOA->ODR ^= (1 << target_pin);
-				for (int k = 0; k < 6; k++) {
+				for (int l = 0; l < 6; l++) {
 				GPIOA->ODR ^= (1 << target_pin);
-				//
+				// simple delay
 				for (volatile int d = 0; d < 200000; d++);
 				}
 			} else {
 				// Blink all LEDs a few times
-				for (int k = 0; k < 6; k++) {
+				for (int l = 0; l < 6; l++) {
 					GPIOA->ODR ^= LED_MASK;
+					// simple delay
 					for (volatile int d = 0; d < 200000; d++);
 				}
 				GPIOA->ODR &= ~LED_MASK;
@@ -87,11 +89,11 @@ void EXTI2_IRQHandler(void) {
 
 void configure_EXTI(void){
 
-	//1. Enable the EXTI lines 2 interrupt in NVIC using a function from CMSIS's core_cm4.h.
+	//1. Enable the EXTI line 2 interrupt in the NVIC 
 	NVIC_EnableIRQ(EXTI2_IRQn);
 
 	//2. Configure the SYSCFG module
-	// link EXTI line 2 to GPIO PC2 and EXTI line 3 to GPIO PC3
+	// link EXTI line 2 to GPIO PC2 
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;				// Enable the clock to SYSCFG
 	//exti line 2, clear and set
 	SYSCFG->EXTICR[0] &= ~SYSCFG_EXTICR1_EXTI2;     	// Clear the EXTI2 bits in SYSCFG's EXTICR1 register.
@@ -102,15 +104,13 @@ void configure_EXTI(void){
 	EXTI->IMR1 |= (1<<2);		//Interrupt Mask Register (IMR): 0 = marked, 1 = not masked (i.e., enabled)
 
 	//4. Enable interrupt trigger for both rising (button release) and falling (button press) edges.
-	//bcuz sw is pos logic
 	EXTI->RTSR1 |= (1<<2);  //Rising trigger selection register (RTSR):0 = disabled, 1 = enabled
-	//EXTI->FTSR1 |= (1<<2);  //Falling trigger selection register (FTSR): 0 = disabled, 1 = enabled
 
 }
 
 int main(void)
 {
-	// Configure LEDs on PA0,1,2,3,6
+	// Configure LEDs on PA0,1,6,7,4
 	configure_LED_pa0();
 	configure_LED_pa1();
 	configure_LED_pa6();
@@ -120,11 +120,8 @@ int main(void)
 	GPIOA->ODR &= ~LED_MASK;
 
 	configure_Button_pc13();
-	configure_Button_pc2();   // optional
+	configure_Button_pc2();  
 	configure_EXTI();
-	// 100 ms step: 4 MHz * 0.1 s = 400000
-	//todo change back
-	//SysTick_Init(4000000);
 
 	pinNum = 0;
 	game_running = 1;
