@@ -33,7 +33,7 @@ void turnOFF_LED_pa4(void) { GPIOA->ODR &= ~(1 << 4); }
 
 // ---- BUTTON CONFIG ----
 
-// Blue user button on PC13, with EXTI interrupt
+// Blue user button on PC13, start/restart
 void configure_Button_pc13(void)
 {
     // GPIOC clock
@@ -63,7 +63,7 @@ void configure_Button_pc13(void)
     NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
-// Optional: external button on PC2 as simple input
+// Stop chasing button
 void configure_Button_pc2(void)
 {
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
